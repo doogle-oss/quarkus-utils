@@ -10,7 +10,7 @@
       "type": "java",
       "request": "attach",
       "hostName": "localhost",
-      "name": "Debug Quarkus application",
+      "name": "Debug Quarkus application in dev mode",
       "port": 5005
     }
   ]
