@@ -94,3 +94,39 @@ Start coding with this Hello GraphQL Query
 Monitor your application's health using SmallRye Health
 
 [Related guide section...](https://quarkus.io/guides/smallrye-health)
+
+## Local development
+
+ - **Purpose:** Run the application locally against a Postgres database (Neon, local Postgres, Docker, etc.).
+ - **Profile:** Use the `local` Quarkus profile for local configuration. Create an `application-local.yml` file under `src/main/resources` (or `src/main/resources/application-local.yml`) and place your local overrides there.
+
+Recommended `application-local.yml` example (do NOT commit secrets):
+
+```yaml
+quarkus:
+  datasource:
+    username: ${DB_USER:your_db_username}
+    password: ${DB_PASSWORD:your_db_password}
+    jdbc:
+      url: ${DB_JDBC_URL:jdbc:postgresql://localhost:5432/yourdb}
+```
+
+- Explanation:
+	- **`quarkus.datasource.username`**: database username (example: `neondb_owner`), prefer to set via environment variable `DB_USER`.
+	- **`quarkus.datasource.password`**: database password, prefer to set via environment variable `DB_PASSWORD`.
+	- **`quarkus.datasource.jdbc.url`**: JDBC connection string (example for Neon with TLS): `jdbc:postgresql://<host>/<db>?sslmode=require&channel_binding=require` — use `DB_JDBC_URL` env var to avoid committing secrets.
+
+- Example using environment variables (macOS / Linux):
+
+```bash
+export DB_USER=USER
+export DB_PASSWORD=REPLACE_ME
+export DB_JDBC_URL='jdbc:postgresql://postgresdburl'
+./mvnw quarkus:dev -Dquarkus.profile=local
+```
+
+- Notes & security:
+	- Do not commit real credentials into the repository. Use `.env` files ignored by Git or CI secrets.
+	- For production, configure credentials via your deployment platform's secret management.
+
+If you prefer `application-local.properties` instead of YAML, add the same three properties there with keys `quarkus.datasource.username`, `quarkus.datasource.password`, and `quarkus.datasource.jdbc.url`.
