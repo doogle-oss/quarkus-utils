@@ -3,6 +3,7 @@ package org.doogleoss.security;
 import java.util.List;
 import java.util.Set;
 
+import io.quarkus.logging.Log;
 import io.quarkus.security.webauthn.WebAuthnCredentialRecord;
 import io.quarkus.security.webauthn.WebAuthnUserProvider;
 import io.smallrye.common.annotation.Blocking;
@@ -17,17 +18,16 @@ public class WebAuthnSetup implements WebAuthnUserProvider {
     @Override
     @Transactional
     public Uni<List<WebAuthnCredentialRecord>> findByUsername(String username) {
-        return Uni.createFrom().item(
-                WebAuthnCredential.findByUsername(username)
-                        .stream()
-                        .map(WebAuthnCredential::toRecord)
-                        .toList());
+        return Uni.createFrom().item(WebAuthnCredential.findByUsername(username).stream()
+                .map(WebAuthnCredential::toRecord).toList());
     }
 
     @Override
     @Transactional
     public Uni<WebAuthnCredentialRecord> findByCredentialId(String credentialId) {
         WebAuthnCredential credential = WebAuthnCredential.findByCredentialId(credentialId);
+        Log.infof("findByCredentialId: credentialId=%s, found=%s", credentialId, credential != null);
+
         if (credential == null) {
             return Uni.createFrom().failure(new RuntimeException("Credential not found"));
         }
@@ -37,16 +37,17 @@ public class WebAuthnSetup implements WebAuthnUserProvider {
     @Override
     @Transactional
     public Uni<Void> store(WebAuthnCredentialRecord record) {
-        if (User.findByUsername(record.getUsername()) != null) {
-            return Uni.createFrom().failure(
-                    new RuntimeException("User already exists"));
-        }
 
-        User user = new User();
+        var existingUser = User.findByUsername(record.getUsername());
+        User user = existingUser != null ? existingUser : new User();
+
+
         user.username = record.getUsername();
 
         WebAuthnCredential credential = new WebAuthnCredential(record, user);
-        user.persist();
+        if (existingUser == null) {
+            user.persist();
+        }
         credential.persist();
 
         return Uni.createFrom().voidItem();
