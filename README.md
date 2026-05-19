@@ -109,6 +109,10 @@ quarkus:
     password: ${DB_PASSWORD:your_db_password}
     jdbc:
       url: ${DB_JDBC_URL:jdbc:postgresql://localhost:5432/yourdb}
+  http:
+    auth:
+      session:
+        encryption-key: {$ENC_KEY: your_enc_key_for_http_session}
 ```
 
 - Explanation:
